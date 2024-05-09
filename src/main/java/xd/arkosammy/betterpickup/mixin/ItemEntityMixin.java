@@ -161,12 +161,12 @@ public abstract class ItemEntityMixin implements ItemEntityAccessor {
         if(thrower instanceof PlayerEntity throwerEntity) {
             boolean isCollidingPlayerThrower = throwerEntity.getUuid().equals(collidingPlayer.getUuid());
             boolean enoughTimePassed = isCollidingPlayerThrower || isCollidingPlayerOwner ? this.pickupDelay == 0 : this.stealDelay == 0;
-            return original.call(instance, stack) && enoughTimePassed;
+            return enoughTimePassed && original.call(instance, stack);
         } else if (minerEntity != null) { // Block drops
             World world = ((ItemEntity)(Object) this).getWorld();
             boolean isCollidingPlayerMiner = minerEntity.getUuid().equals(collidingPlayer.getUuid());
             boolean enoughTimePassed = isCollidingPlayerMiner || isCollidingPlayerOwner ? this.blockDropPickupDelay == 0 : this.stealDelay == 0;
-            return original.call(instance, stack) && (enoughTimePassed || world.getGameRules().getBoolean(BetterPickup.DO_AUTO_PICKUP));
+            return (enoughTimePassed || world.getGameRules().getBoolean(BetterPickup.DO_AUTO_PICKUP)) && original.call(instance, stack);
         }
         return original.call(instance, stack);
     }
