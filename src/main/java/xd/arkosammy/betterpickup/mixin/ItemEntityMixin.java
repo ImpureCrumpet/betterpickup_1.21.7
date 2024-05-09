@@ -150,7 +150,7 @@ public abstract class ItemEntityMixin implements ItemEntityAccessor {
     }
 
     @SuppressWarnings("UnreachableCode")
-    @ModifyExpressionValue(method = "onPlayerCollision", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "net/minecraft/entity/ItemEntity.pickupDelay:I"))
+    @ModifyExpressionValue(method = "onPlayerCollision", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/entity/ItemEntity;pickupDelay:I"))
     private int modifyPickupDelay(int original, @Local(argsOnly = true) PlayerEntity collidingPlayer) {
         Entity thrower = this.getOwner();
         PlayerEntity minerEntity = this.betterpickup$getBreakingEntity();
