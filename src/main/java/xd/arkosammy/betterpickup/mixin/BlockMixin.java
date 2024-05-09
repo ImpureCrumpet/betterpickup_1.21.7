@@ -12,9 +12,8 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import xd.arkosammy.betterpickup.BetterPickup;
-import xd.arkosammy.betterpickup.util.ItemEntityAccessor;
 import xd.arkosammy.betterpickup.util.ItemStackAccessor;
+import xd.arkosammy.betterpickup.util.events.ItemEntitySpawned;
 
 import java.util.List;
 
@@ -24,17 +23,10 @@ public class BlockMixin {
     @SuppressWarnings("UnreachableCode")
     @WrapOperation(method = "dropStack(Lnet/minecraft/world/World;Ljava/util/function/Supplier;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE",  target = "Lnet/minecraft/world/World;spawnEntity(Lnet/minecraft/entity/Entity;)Z"))
     private static boolean onItemStackSpawned(World instance, Entity entity, Operation<Boolean> original) {
-
         if(!(entity instanceof ItemEntity itemEntity)) {
             return original.call(instance, entity);
         }
-
-        Entity breakingEntity = ((ItemStackAccessor) (Object) itemEntity.getStack()).betterpick$getBreakingEntity();
-        ((ItemEntityAccessor)itemEntity).betterpickup$setBreakingEntityUuid(breakingEntity == null ? null : breakingEntity.getUuid());
-        ((ItemEntityAccessor)itemEntity).betterpickup$setPlayerDropPickupDelay(instance.getGameRules().getInt(BetterPickup.PLAYER_DROPS_DELAY));
-        ((ItemEntityAccessor)itemEntity).betterpickup$setBlockDropPickupDelay(instance.getGameRules().getInt(BetterPickup.BLOCK_DROPS_DELAY));
-        ((ItemEntityAccessor)itemEntity).betterpickup$setStealPickupDelay(instance.getGameRules().getInt(BetterPickup.STEAL_DELAY));
-
+        ItemEntitySpawned.EVENT.invoker().onItemEntitySpawned(itemEntity, ((ItemStackAccessor) (Object) itemEntity.getStack()).betterpick$getBreakingEntity(), instance);
         return original.call(instance, entity);
     }
 
