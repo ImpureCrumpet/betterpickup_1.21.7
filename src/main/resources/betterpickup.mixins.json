@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "xd.arkosammy.betterpickup.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "BlockMixin",
+    "ItemEntityMixin",
+    "ItemStackMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+	}
+}
