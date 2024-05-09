@@ -1,5 +1,6 @@
 package xd.arkosammy.betterpickup.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -7,11 +8,10 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -149,26 +149,25 @@ public abstract class ItemEntityMixin implements ItemEntityAccessor {
         return isInvulnerable || world.getGameRules().getBoolean(BetterPickup.INVULNERABLE_BLOCK_DROPS);
     }
 
-    // TODO: Take into account the case where the vanilla pickupDelay is not 0 (which cuts off the PlayerInventory#insertStack method from being called)
-    // Make the pickup delay between the owner or miner and other players different
     @SuppressWarnings("UnreachableCode")
-    @WrapOperation(method = "onPlayerCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;insertStack(Lnet/minecraft/item/ItemStack;)Z"))
-    private boolean onItemAttemptedInserted(PlayerInventory instance, ItemStack stack, Operation<Boolean> original, @Local(argsOnly = true) PlayerEntity collidingPlayer) {
+    @ModifyExpressionValue(method = "onPlayerCollision", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "net/minecraft/entity/ItemEntity.pickupDelay:I"))
+    private int modifyPickupDelay(int original, @Local(argsOnly = true) PlayerEntity collidingPlayer) {
         Entity thrower = this.getOwner();
         PlayerEntity minerEntity = this.betterpickup$getBreakingEntity();
-        boolean isCollidingPlayerOwner = this.owner == null || this.owner.equals(collidingPlayer.getUuid());
-        // Player drops
+        boolean isCollidingPlayerOwner = this.owner != null && this.owner.equals(collidingPlayer.getUuid());
         if(thrower instanceof PlayerEntity throwerEntity) {
+            // Player drops
             boolean isCollidingPlayerThrower = throwerEntity.getUuid().equals(collidingPlayer.getUuid());
-            boolean enoughTimePassed = isCollidingPlayerThrower || isCollidingPlayerOwner ? this.pickupDelay == 0 : this.stealDelay == 0;
-            return enoughTimePassed && original.call(instance, stack);
-        } else if (minerEntity != null) { // Block drops
+            int pickupDelayToUse = isCollidingPlayerThrower || isCollidingPlayerOwner ? original : this.stealDelay;
+            return pickupDelayToUse;
+        } else if (minerEntity != null) {
+            // Block drops
             World world = ((ItemEntity)(Object) this).getWorld();
             boolean isCollidingPlayerMiner = minerEntity.getUuid().equals(collidingPlayer.getUuid());
-            boolean enoughTimePassed = isCollidingPlayerMiner || isCollidingPlayerOwner ? this.blockDropPickupDelay == 0 : this.stealDelay == 0;
-            return (enoughTimePassed || world.getGameRules().getBoolean(BetterPickup.DO_AUTO_PICKUP)) && original.call(instance, stack);
+            int pickupDelayToUse = isCollidingPlayerMiner || isCollidingPlayerOwner ? this.blockDropPickupDelay : this.stealDelay;
+            return world.getGameRules().getBoolean(BetterPickup.DO_AUTO_PICKUP) ? 0 : pickupDelayToUse;
         }
-        return original.call(instance, stack);
+        return original;
     }
 
 }
