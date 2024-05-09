@@ -90,7 +90,7 @@ public abstract class ItemEntityMixin implements ItemEntityAccessor {
     @Inject(method = "tick", at = @At("RETURN"))
     private void onTickFinished(CallbackInfo ci) {
         if (this.blockDropPickupDelay > 0 && this.blockDropPickupDelay != 32767) {
-            --this.pickupDelay;
+            --this.blockDropPickupDelay;
         }
         if (this.stealDelay > 0 && this.stealDelay != 32767) {
             --this.stealDelay;
