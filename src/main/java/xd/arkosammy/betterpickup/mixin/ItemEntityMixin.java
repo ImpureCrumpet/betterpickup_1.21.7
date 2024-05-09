@@ -43,7 +43,7 @@ public abstract class ItemEntityMixin implements ItemEntityAccessor {
     private int blockDropPickupDelay = 10;
 
     @Unique
-    private int stealDelay = 20;
+    private int stealDelay = 40;
 
     @Override
     public void betterpickup$setPlayerDropPickupDelay(int pickupDelay) {
