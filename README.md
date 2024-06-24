@@ -9,8 +9,8 @@ This is a Minecraft Fabric server-side mod that improves the item pickup mechani
 Server admins are able to configure individual item pickup delays for items dropped by players, items dropped by a block being mined, as well as a "steal delay" to serve for the pickup delay for players who didn't throw the item or didn't mine the block that the item was dropped from.
 To configure these values, the following gamerules have been added:
 
-- `/gamerule playerDropsDelay <integer>` - The delay in ticks for items dropped by players. Default value is `10`.
-- `/gamerule blockDropsDelay <integer>` - The delay in ticks for items dropped by the mining of blocks. Default value is `20`.
+- `/gamerule playerDropsDelay <integer>` - The delay in ticks for items dropped by players. Default value is `20`.
+- `/gamerule blockDropsDelay <integer>` - The delay in ticks for items dropped by the mining of blocks. Default value is `10`.
 - `/gamerule stealDelay <integer>` - The delay in ticks for items that were not thrown by the player or mined by the player. Default value is `40`.
 
 All of these delays have a minimum value of one tick.
