@@ -17,7 +17,7 @@ public class BetterPickup implements ModInitializer {
 
 	public static final String MOD_ID = "betterpickup";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-	public static final CustomGameRuleCategory CATEGORY = new CustomGameRuleCategory(new Identifier(MOD_ID, "gamerules"), Text.literal(MOD_ID));
+	public static final CustomGameRuleCategory CATEGORY = new CustomGameRuleCategory(Identifier.of(MOD_ID, "gamerules"), Text.literal(MOD_ID));
 	public static final GameRules.Key<GameRules.BooleanRule> DO_AUTO_PICKUP = GameRuleRegistry.register("doAutoPickups", CATEGORY, GameRuleFactory.createBooleanRule(true));
 	public static final GameRules.Key<GameRules.BooleanRule> INVULNERABLE_BLOCK_DROPS = GameRuleRegistry.register("invulnerableBlockDrops", CATEGORY, GameRuleFactory.createBooleanRule(true));
 	public static final GameRules.Key<GameRules.IntRule> PLAYER_DROPS_DELAY = GameRuleRegistry.register("playerDropsDelay", CATEGORY, GameRuleFactory.createIntRule(20, 1));
