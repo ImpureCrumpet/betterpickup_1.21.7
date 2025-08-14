@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xd.arkosammy.betterpickup.BetterPickup;
 import xd.arkosammy.betterpickup.util.ItemEntityAccessor;
 
@@ -135,21 +136,21 @@ public abstract class ItemEntityMixin implements ItemEntityAccessor {
         });
     }
 
-    // Make the item entity invulnerable to damage
+    // Make the item entity invulnerable to damage for block drops when gamerule is enabled
     @SuppressWarnings("UnreachableCode")
-    @WrapOperation(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ItemEntity;isInvulnerableTo(Lnet/minecraft/entity/damage/DamageSource;)Z"))
-    private boolean isItemEntityInvulnerable(ItemEntity instance, DamageSource damageSource, Operation<Boolean> original) {
-        boolean isInvulnerable = original.call(instance, damageSource);
-        // We only make item entities without throwers and with miners invulnerable (they come from block drops)
-        if(this.getOwner() != null) {
-            return isInvulnerable;
+    @Inject(method = "damage(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/damage/DamageSource;F)Z", at = @At("HEAD"), cancellable = true)
+    private void betterpickup$cancelDamageIfInvulnerable(ServerWorld serverWorld, DamageSource damageSource, float amount, CallbackInfoReturnable<Boolean> cir) {
+        // Only for item entities that come from block drops (no thrower but has miner)
+        if (this.getOwner() != null) {
+            return;
         }
         PlayerEntity miner = this.betterpickup$getBreakingEntity();
-        if(miner == null) {
-            return isInvulnerable;
+        if (miner == null) {
+            return;
         }
-        World world = ((ItemEntity)(Object) this).getWorld();
-        return isInvulnerable || (world instanceof ServerWorld serverWorld && serverWorld.getGameRules().getBoolean(BetterPickup.INVULNERABLE_BLOCK_DROPS));
+        if (serverWorld.getGameRules().getBoolean(BetterPickup.INVULNERABLE_BLOCK_DROPS)) {
+            cir.setReturnValue(false);
+        }
     }
 
     @SuppressWarnings("UnreachableCode")
