@@ -2,6 +2,10 @@
 
 This is a Minecraft Fabric server-side mod that improves the item pickup mechanics of Minecraft.
 
+### Fork notice
+
+This repository is a fork updated to support Minecraft 1.21.7 (Fabric API 0.129.0+1.21.7), maintained by James Thomas. The original mod is by ArkoSammy12 and can be found at `https://github.com/ArkoSammy12/betterpickup`.
+
 ### This mod is heavily based on the [Better Pickup](https://www.spigotmc.org/resources/better-pickup.78596/) plugin for Spigot-based servers, developed by [Chailotl](https://github.com/Chailotl). Credits for the idea of this mod as well as the mod's name goes to them.
 
 ## Pickup delays
