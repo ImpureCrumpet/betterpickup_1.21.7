@@ -9,6 +9,8 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
+import java.util.UUID;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
@@ -104,32 +106,32 @@ public abstract class ItemEntityMixin implements ItemEntityAccessor {
             return;
         }
         World world = ((ItemEntity)(Object) this).getWorld();
-        if(world.getGameRules().getBoolean(BetterPickup.DO_AUTO_PICKUP)) {
+        if(world instanceof ServerWorld serverWorld && serverWorld.getGameRules().getBoolean(BetterPickup.DO_AUTO_PICKUP)) {
             this.onPlayerCollision(miner);
         }
 
     }
 
-    @Inject(method = "writeCustomDataToNbt", at = @At("RETURN"))
+    @Inject(method = "writeCustomDataToNbt(Lnet/minecraft/nbt/NbtCompound;)V", at = @At("RETURN"))
     private void writeCustomDataToNbt(NbtCompound nbt , CallbackInfo ci) {
         nbt.putInt("BlockDropPickupDelay", this.blockDropPickupDelay);
         nbt.putInt("StealDelay", this.stealDelay);
         if(this.breakingEntity != null) {
-            nbt.putUuid("BreakingEntity", this.breakingEntity);
+            nbt.putString("BreakingEntity", this.breakingEntity.toString());
         }
     }
 
-    @Inject(method = "readCustomDataFromNbt", at = @At("RETURN"))
+    @Inject(method = "readCustomDataFromNbt(Lnet/minecraft/nbt/NbtCompound;)V", at = @At("RETURN"))
     private void readCustomDataFromNbt(NbtCompound nbt, CallbackInfo ci) {
-        if(nbt.contains("BlockDropPickupDelay")) {
-            this.blockDropPickupDelay = nbt.getInt("BlockDropPickupDelay");
-        }
-        if(nbt.contains("StealDelay")) {
-            this.stealDelay = nbt.getInt("StealDelay");
-        }
-        if(nbt.contains("BreakingEntity")) {
-            this.breakingEntity = nbt.getUuid("BreakingEntity");
-        }
+        nbt.getInt("BlockDropPickupDelay").ifPresent(value -> this.blockDropPickupDelay = value);
+        nbt.getInt("StealDelay").ifPresent(value -> this.stealDelay = value);
+        nbt.getString("BreakingEntity").ifPresent(value -> {
+            try {
+                this.breakingEntity = UUID.fromString(value);
+            } catch (IllegalArgumentException ignored) {
+                this.breakingEntity = null;
+            }
+        });
     }
 
     // Make the item entity invulnerable to damage
@@ -146,7 +148,7 @@ public abstract class ItemEntityMixin implements ItemEntityAccessor {
             return isInvulnerable;
         }
         World world = ((ItemEntity)(Object) this).getWorld();
-        return isInvulnerable || world.getGameRules().getBoolean(BetterPickup.INVULNERABLE_BLOCK_DROPS);
+        return isInvulnerable || (world instanceof ServerWorld serverWorld && serverWorld.getGameRules().getBoolean(BetterPickup.INVULNERABLE_BLOCK_DROPS));
     }
 
     @SuppressWarnings("UnreachableCode")
@@ -165,7 +167,7 @@ public abstract class ItemEntityMixin implements ItemEntityAccessor {
             World world = ((ItemEntity)(Object) this).getWorld();
             boolean isCollidingPlayerMiner = minerEntity.getUuid().equals(collidingPlayer.getUuid());
             int pickupDelayToUse = isCollidingPlayerMiner || isCollidingPlayerOwner ? this.blockDropPickupDelay : this.stealDelay;
-            return world.getGameRules().getBoolean(BetterPickup.DO_AUTO_PICKUP) ? 0 : pickupDelayToUse;
+            return (world instanceof ServerWorld serverWorld && serverWorld.getGameRules().getBoolean(BetterPickup.DO_AUTO_PICKUP)) ? 0 : pickupDelayToUse;
         }
         return original;
     }

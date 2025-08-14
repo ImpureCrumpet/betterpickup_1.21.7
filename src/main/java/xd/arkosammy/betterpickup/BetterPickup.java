@@ -5,8 +5,10 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.GameRules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +31,22 @@ public class BetterPickup implements ModInitializer {
 	public void onInitialize() {
 		ItemEntitySpawned.EVENT.register((itemEntity, breakingEntity, world) -> {
 			((ItemEntityAccessor)itemEntity).betterpickup$setBreakingEntityUuid(breakingEntity == null ? null : breakingEntity.getUuid());
-			((ItemEntityAccessor)itemEntity).betterpickup$setPlayerDropPickupDelay(world.getGameRules().getInt(BetterPickup.PLAYER_DROPS_DELAY));
-			((ItemEntityAccessor)itemEntity).betterpickup$setBlockDropPickupDelay(world.getGameRules().getInt(BetterPickup.BLOCK_DROPS_DELAY));
-			((ItemEntityAccessor)itemEntity).betterpickup$setStealPickupDelay(world.getGameRules().getInt(BetterPickup.STEAL_DELAY));
+			if(world instanceof ServerWorld serverWorld) {
+				((ItemEntityAccessor)itemEntity).betterpickup$setPlayerDropPickupDelay(serverWorld.getGameRules().getInt(BetterPickup.PLAYER_DROPS_DELAY));
+				((ItemEntityAccessor)itemEntity).betterpickup$setBlockDropPickupDelay(serverWorld.getGameRules().getInt(BetterPickup.BLOCK_DROPS_DELAY));
+				((ItemEntityAccessor)itemEntity).betterpickup$setStealPickupDelay(serverWorld.getGameRules().getInt(BetterPickup.STEAL_DELAY));
+			}
+		});
+
+		// Fallback for player item drops: fire our event when an ItemEntity owned by a player is spawned
+		ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+			if (!(entity instanceof net.minecraft.entity.ItemEntity itemEntity)) {
+				return;
+			}
+			var owner = itemEntity.getOwner();
+			if (owner instanceof net.minecraft.entity.player.PlayerEntity) {
+				ItemEntitySpawned.EVENT.invoker().onItemEntitySpawned(itemEntity, null, world);
+			}
 		});
 	}
 }
