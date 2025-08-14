@@ -8,7 +8,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import java.util.UUID;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
@@ -112,8 +113,8 @@ public abstract class ItemEntityMixin implements ItemEntityAccessor {
 
     }
 
-    @Inject(method = "writeCustomDataToNbt(Lnet/minecraft/nbt/NbtCompound;)V", at = @At("RETURN"))
-    private void writeCustomDataToNbt(NbtCompound nbt , CallbackInfo ci) {
+    @Inject(method = "writeCustomData(Lnet/minecraft/storage/WriteView;)V", at = @At("RETURN"))
+    private void writeCustomDataToNbt(WriteView nbt , CallbackInfo ci) {
         nbt.putInt("BlockDropPickupDelay", this.blockDropPickupDelay);
         nbt.putInt("StealDelay", this.stealDelay);
         if(this.breakingEntity != null) {
@@ -121,11 +122,11 @@ public abstract class ItemEntityMixin implements ItemEntityAccessor {
         }
     }
 
-    @Inject(method = "readCustomDataFromNbt(Lnet/minecraft/nbt/NbtCompound;)V", at = @At("RETURN"))
-    private void readCustomDataFromNbt(NbtCompound nbt, CallbackInfo ci) {
-        nbt.getInt("BlockDropPickupDelay").ifPresent(value -> this.blockDropPickupDelay = value);
-        nbt.getInt("StealDelay").ifPresent(value -> this.stealDelay = value);
-        nbt.getString("BreakingEntity").ifPresent(value -> {
+    @Inject(method = "readCustomData(Lnet/minecraft/storage/ReadView;)V", at = @At("RETURN"))
+    private void readCustomDataFromNbt(ReadView nbt, CallbackInfo ci) {
+        nbt.getOptionalInt("BlockDropPickupDelay").ifPresent(value -> this.blockDropPickupDelay = value);
+        nbt.getOptionalInt("StealDelay").ifPresent(value -> this.stealDelay = value);
+        nbt.getOptionalString("BreakingEntity").ifPresent(value -> {
             try {
                 this.breakingEntity = UUID.fromString(value);
             } catch (IllegalArgumentException ignored) {
